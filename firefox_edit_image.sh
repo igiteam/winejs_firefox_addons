@@ -1798,7 +1798,6 @@ EOL
 echo -e "${CYAN}📦 Auto-packaging extension as .xpi file...${NC}"
 
 # Stay in the extension directory
-cd "$EXTNAME" || exit
 XPI_FILE="${EXTNAME}.xpi"
 
 # Remove any existing XPI file
