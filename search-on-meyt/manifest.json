@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "Search Highlighted Text on Meyt",
+  "version": "2.0",
+  "description": "Right-click highlighted text to search it on meyt.macosxjs.com",
+  "icons": {
+    "48": "icons/icon.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "menus",
+    "contextMenus",
+    "activeTab"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "search-on-meyt@custom.addon",
+      "strict_min_version": "57.0"
+    }
+  }
+}
