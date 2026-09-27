@@ -417,7 +417,7 @@ function showNotification(message) {
 }
 EOL
 
-# Create content.js (keep hover effects but with original design colors)
+# Create content.js (message handlers only - no hover/click hijacking)
 cat << 'EOL' > content.js
 // Content script for TinyIMG Editor
 
@@ -427,10 +427,10 @@ console.log("TinyIMG Editor content script loaded");
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "getCurrentImage") {
     const images = Array.from(document.querySelectorAll('img'));
-    
+
     let largestImage = null;
     let maxSize = 0;
-    
+
     images.forEach(img => {
       const size = img.width * img.height;
       if (size > maxSize && !img.src.startsWith('data:') && img.src) {
@@ -438,7 +438,7 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         largestImage = img;
       }
     });
-    
+
     if (largestImage) {
       sendResponse({url: largestImage.src, success: true});
     } else {
@@ -454,199 +454,12 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
         height: img.height,
         alt: img.alt || 'image'
       }));
-    
+
     sendResponse({images: imageUrls, success: true});
   }
-  
+
   return true;
 });
-
-// Add image hover effects (using original design colors - #3a76b1 blue)
-function addImageHoverEffects() {
-  document.addEventListener('mouseover', (e) => {
-    if (e.target.tagName === 'IMG' && !e.target.src.startsWith('data:') && e.target.src) {
-      const img = e.target;
-      
-      img.style.boxShadow = '0 0 0 3px #3a76b1';
-      img.style.transition = 'box-shadow 0.3s';
-      img.style.cursor = 'pointer';
-      img.style.borderRadius = '4px';
-      
-      if (!img.hasAttribute('data-image-editor-click')) {
-        img.setAttribute('data-image-editor-click', 'true');
-        img.addEventListener('click', handleImageClick, {once: true});
-      }
-    }
-  });
-
-  document.addEventListener('mouseout', (e) => {
-    if (e.target.tagName === 'IMG') {
-      e.target.style.boxShadow = '';
-      e.target.style.cursor = '';
-    }
-  });
-}
-
-// Handle image click
-function handleImageClick(e) {
-  e.preventDefault();
-  e.stopPropagation();
-  showImageOptions(e.target);
-}
-
-// Show image options overlay (using original design)
-function showImageOptions(img) {
-  const existingOverlay = document.getElementById('image-editor-overlay');
-  if (existingOverlay) existingOverlay.remove();
-  
-  const overlay = document.createElement('div');
-  overlay.id = 'image-editor-overlay';
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.backgroundColor = 'rgba(0,0,0,0.7)';
-  overlay.style.zIndex = '999999';
-  overlay.style.display = 'flex';
-  overlay.style.justifyContent = 'center';
-  overlay.style.alignItems = 'center';
-  
-  const optionsBox = document.createElement('div');
-  optionsBox.style.backgroundColor = '#efefef';
-  optionsBox.style.padding = '20px';
-  optionsBox.style.borderRadius = '0';
-  optionsBox.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
-  optionsBox.style.textAlign = 'center';
-  optionsBox.style.minWidth = '300px';
-  optionsBox.style.border = '1px solid #5a5a5a';
-  
-  const title = document.createElement('h3');
-  title.textContent = 'TinyIMG Editor';
-  title.style.marginBottom = '15px';
-  title.style.color = '#000';
-  title.style.fontSize = '16px';
-  title.style.fontWeight = 'bold';
-  
-  const preview = document.createElement('img');
-  preview.src = img.src;
-  preview.style.maxWidth = '200px';
-  preview.style.maxHeight = '150px';
-  preview.style.marginBottom = '15px';
-  preview.style.border = '1px solid #c4c4c4';
-  preview.style.objectFit = 'contain';
-  
-  const buttonsContainer = document.createElement('div');
-  buttonsContainer.style.display = 'flex';
-  buttonsContainer.style.flexDirection = 'column';
-  buttonsContainer.style.gap = '8px';
-  
-  const cropBtn = createButton('Crop Image', () => {
-    browser.runtime.sendMessage({
-      action: 'setImageData',
-      imageData: img.src
-    }).then(() => {
-      window.open(browser.runtime.getURL('editor.html') + '?image=' + encodeURIComponent(img.src), '_blank');
-      overlay.remove();
-    });
-  });
-  
-  const removeBgBtn = createButton('Remove Background', () => {
-    browser.runtime.sendMessage({
-      action: 'removeBackground',
-      imageUrl: img.src
-    }).then(response => {
-      if (response.success) {
-        window.open(browser.runtime.getURL('editor.html') + '?image=' + encodeURIComponent(response.imageData) + '&fromRemoveBg=true', '_blank');
-      }
-      overlay.remove();
-    });
-  });
-  
-  const downloadBtn = createButton('Download Image', () => {
-    const link = document.createElement('a');
-    link.href = img.src;
-    link.download = img.alt || 'image';
-    link.click();
-    overlay.remove();
-  });
-  
-  const closeBtn = createButton('Close', () => {
-    overlay.remove();
-  });
-  
-  buttonsContainer.appendChild(cropBtn);
-  buttonsContainer.appendChild(removeBgBtn);
-  buttonsContainer.appendChild(downloadBtn);
-  buttonsContainer.appendChild(closeBtn);
-  
-  optionsBox.appendChild(title);
-  optionsBox.appendChild(preview);
-  optionsBox.appendChild(buttonsContainer);
-  overlay.appendChild(optionsBox);
-  
-  document.body.appendChild(overlay);
-}
-
-// Create button element (original design)
-function createButton(text, onClick) {
-  const button = document.createElement('button');
-  button.textContent = text;
-  button.style.backgroundColor = '#efefef';
-  button.style.color = '#000';
-  button.style.border = '1px solid #c4c4c4';
-  button.style.padding = '8px 16px';
-  button.style.margin = '0';
-  button.style.cursor = 'pointer';
-  button.style.fontSize = '14px';
-  button.style.width = '100%';
-  button.style.fontFamily = 'Arial, sans-serif';
-  
-  button.addEventListener('mouseenter', () => {
-    button.style.backgroundColor = '#d6d6d6';
-  });
-  
-  button.addEventListener('mouseleave', () => {
-    button.style.backgroundColor = '#efefef';
-  });
-  
-  button.addEventListener('click', onClick);
-  
-  return button;
-}
-
-// Initialize when page is loaded
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', addImageHoverEffects);
-} else {
-  addImageHoverEffects();
-}
-
-// Observer for dynamically added images
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.addedNodes.length) {
-      mutation.addedNodes.forEach((node) => {
-        if (node.nodeType === 1) {
-          if (node.tagName === 'IMG' && node.src && !node.src.startsWith('data:')) {
-            node.style.boxShadow = '0 0 0 3px #3a76b1';
-            node.style.cursor = 'pointer';
-            node.addEventListener('click', handleImageClick);
-          }
-          node.querySelectorAll && node.querySelectorAll('img').forEach(img => {
-            if (img.src && !img.src.startsWith('data:')) {
-              img.style.boxShadow = '0 0 0 3px #3a76b1';
-              img.style.cursor = 'pointer';
-              img.addEventListener('click', handleImageClick);
-            }
-          });
-        }
-      });
-    }
-  });
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
 EOL
 
 # Create popup.html (ORIGINAL TINYIMG DESIGN restored!)

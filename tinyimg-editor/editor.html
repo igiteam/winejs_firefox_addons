@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>TinyIMG Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0" />
+  <link rel="icon" type="image/png" href="icons/icon.png">
+  <style>
+    * {
+      font-family: Arial, sans-serif;
+      font-size: 16px;
+      box-sizing: border-box;
+      user-select: none;
+      -moz-user-select: none;
+    }
+    
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    
+    .toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 180px;
+      height: 100%;
+      background: #efefef;
+      border-right: 1px solid #5a5a5a;
+      padding: 5px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .toolbar::-webkit-scrollbar {
+      display: none;
+    }
+    
+    .toolbar strong {
+      margin-top: 10px;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    
+    .toolbar hr {
+      border: 0;
+      height: 1px;
+      background: #c4c4c4;
+      margin: 10px 0;
+    }
+    
+    .toolbar button {
+      margin: 3px 5px;
+      padding: 5px;
+      background-color: #efefef;
+      border: 1px solid #c4c4c4;
+      cursor: pointer;
+      font-size: 14px;
+      text-align: left;
+    }
+    
+    .toolbar button:hover {
+      background-color: #d6d6d6;
+    }
+    
+    .toolbar button.selected {
+      outline: 2px solid #3a76b1;
+      background-color: #dce9f9;
+    }
+    
+    .toolbar button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+    
+    .toolbar button:disabled:hover {
+      background-color: #efefef;
+    }
+    
+    .toolbar input[type=number] {
+      width: 100%;
+      padding: 5px;
+      margin: 3px 0;
+      border: 1px solid #c4c4c4;
+      background: #fff;
+      font-size: 14px;
+    }
+    
+    .toolbar input[type=number]:disabled {
+      background-color: #efefef;
+      opacity: 0.4;
+    }
+    
+    .toolbar label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin: 5px 0;
+      font-size: 14px;
+    }
+    
+    .toolbar input[type=checkbox] {
+      cursor: pointer;
+    }
+    
+    .color-picker {
+      margin: 5px;
+      padding: 5px;
+      border: 1px solid #c4c4c4;
+    }
+    
+    .color-picker.disabled {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    
+    .color-picker-preview {
+      width: 100%;
+      height: 30px;
+      border: 1px solid #c4c4c4;
+      margin-bottom: 5px;
+    }
+    
+    .color-picker-input {
+      width: 100%;
+      padding: 5px;
+      margin: 2px 0;
+      border: 1px solid #c4c4c4;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .containerResize {
+      padding: 0 5px;
+    }
+    
+    .title {
+      text-align: center;
+      font-weight: bold;
+      margin: 10px 0;
+      cursor: default;
+    }
+    
+    .workspace {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 180px;
+      overflow: auto;
+    }
+    
+    canvas {
+      background: #fff;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    
+    input[type=file] {
+      display: none;
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background: #efefef;
+      border: 1px solid #5a5a5a;
+      color: #000;
+      z-index: 9999;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <input type="file" id="fileSelector" accept="image/*">
+    <button id="btnOpen">📁 Open</button>
+    <button id="btnUndo" disabled>↩ Undo</button>
+    <button id="btnRedo" disabled>↪ Redo</button>
+    
+    <hr>
+    <strong>Transform</strong>
+    <button id="btnFlipH">↔ Flip H</button>
+    <button id="btnFlipV">↕ Flip V</button>
+    <button id="btnRotateLeft">↺ Rotate L</button>
+    <button id="btnRotateRight">↻ Rotate R</button>
+    <button id="btnCrop">✂ Crop</button>
+    
+    <hr>
+    <strong>Merge</strong>
+    <button id="btnMergeH">◫ Merge H</button>
+    <button id="btnMergeV">▦ Merge V</button>
+    <button id="btnPasteOverlay">📋 Paste Overlay</button>
+    <input type="file" id="mergeFileSelector" accept="image/*">
+    <input type="file" id="pasteOverlayFileSelector" accept="image/*">
+    
+    <hr>
+    <strong>Draw</strong>
+    <button id="btnDrawSquare">■ Square</button>
+    <button id="btnDrawSquareOutline">□ Outline</button>
+    <button id="btnDrawCircle">● Circle</button>
+    <button id="btnDrawCircleOutline">○ Outline</button>
+    <button id="btnDrawLine">/ Line</button>
+    
+    <div class="color-picker disabled" id="colorPicker">
+      <div class="color-picker-preview" id="colorPreview" style="background:#ff0000"></div>
+      <input type="text" id="inputShapeColorHex" class="color-picker-input" value="#ff0000" maxlength="7">
+      <input type="text" id="inputShapeColorRgb" class="color-picker-input" value="255,0,0">
+    </div>
+    
+    <hr>
+    <div class="containerResize">
+      <input type="number" id="inputWidth" min="1" placeholder="Width">
+      <input type="number" id="inputHeight" min="1" placeholder="Height">
+      <label><input type="checkbox" id="checkKeepRatio" checked> Keep ratio</label>
+    </div>
+    
+    <hr>
+    <strong>Download</strong>
+    <button id="btnDownloadPNG">💾 PNG</button>
+    <button id="btnDownloadJPG">💾 JPG</button>
+    <button id="btnDownloadWEBP">💾 WebP</button>
+    
+    <hr>
+    <strong>Base64</strong>
+    <button id="btnDownloadPNGBase64">📄 PNG (Base64)</button>
+    <button id="btnDownloadJPGBase64">📄 JPG (Base64)</button>
+    <button id="btnDownloadWEBPBase64">📄 WebP (Base64)</button>
+    
+    <hr>
+    <button id="btnRemoveBg" class="primary" style="background:#3a76b1; color:white; text-align:center; justify-content:center;">🎭 Remove Background</button>
+  </div>
+  
+  <div class="workspace">
+    <canvas id="canvas"></canvas>
+  </div>
+  
+  <div id="notification" class="notification"></div>
+  
+  <script src="editor.js"></script>
+</body>
+</html>

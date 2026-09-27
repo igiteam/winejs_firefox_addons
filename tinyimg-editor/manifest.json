@@ -1,0 +1,47 @@
+{
+  "manifest_version": 2,
+  "name": "TinyIMG Editor",
+  "version": "1.0",
+  "description": "Crop images, remove backgrounds, draw shapes - simple image editor",
+  "icons": {
+    "48": "icons/icon.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "activeTab",
+    "storage",
+    "contextMenus",
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "*://*.remove.bg/*",
+    "*://api.remove.bg/*"
+  ],
+  "browser_action": {
+    "default_icon": "icons/icon.png",
+    "default_title": "TinyIMG Editor",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    "editor.html",
+    "editor.css",
+    "editor.js"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "@tinyimg-editor",
+      "strict_min_version": "78.0"
+    }
+  }
+}
