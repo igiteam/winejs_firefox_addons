@@ -41,7 +41,7 @@ cd "$EXTNAME" || exit
 
 # Download original icon
 echo -e "${CYAN}📥 Downloading default extension icon...${NC}"
-curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/wine_firefox_addons/main/images/edit-image-logo.png"
+curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/winejs_firefox_addons/refs/heads/main/images/edit-image-logo.png"
 cp icons/icon.png icons/icon128.png
 
 

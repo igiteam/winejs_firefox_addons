@@ -34,7 +34,7 @@ mkdir -p "$EXTNAME/icons"
 cd "$EXTNAME" || exit
 
 echo -e "${CYAN}📥 Downloading default extension icon...${NC}"
-curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/wine_firefox_addons/main/images/youtube-logo-old.png"
+curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/wine_firefox_addons/refs/heads/main/images/youtube-logo-old.png"
 cp icons/icon.png icons/icon128.png
 
 cat << 'EOL' > manifest.json
