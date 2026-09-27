@@ -16,7 +16,7 @@ Image Editing
 Square Image
 https://squareanimage.com/
 
-Change PNG Cplor
+Change PNG Color
 https://onlinepngtools.com/change-png-color
 
 Pixlr Ai Image Editor
