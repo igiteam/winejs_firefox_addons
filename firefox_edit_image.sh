@@ -40,9 +40,10 @@ mkdir -p "$EXTNAME/icons"
 cd "$EXTNAME" || exit
 
 # Download original icon
-echo -e "${CYAN}📥 Downloading extension icon...${NC}"
+echo -e "${CYAN}📥 Downloading default extension icon...${NC}"
 curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/wine_firefox_addons/main/images/edit-image-logo.png"
 cp icons/icon.png icons/icon128.png
+
 
 # Create manifest.json with proper permissions
 cat << 'EOL' > manifest.json
@@ -1797,12 +1798,12 @@ EOL
 echo -e "${CYAN}📦 Auto-packaging extension as .xpi file...${NC}"
 
 # Stay in the extension directory
-cd "$EXTNAME"
+cd "$EXTNAME" || exit
 XPI_FILE="${EXTNAME}.xpi"
 
 # Remove any existing XPI file
 rm -f "$XPI_FILE" 2>/dev/null
-Create the XPI file with correct structure
+# Create the XPI file with correct structure
 
 echo -e "${CYAN}Creating $XPI_FILE...${NC}"
 
