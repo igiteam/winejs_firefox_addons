@@ -26,14 +26,17 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 180px;
+      width: 200px;
       height: 100%;
       background: #efefef;
       border-right: 1px solid #5a5a5a;
       padding: 5px;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-auto-rows: min-content;
+      gap: 4px;
+      align-content: start;
     }
     
     .toolbar::-webkit-scrollbar {

@@ -816,7 +816,7 @@ cat << 'EOL' > editor.html
       user-select: none;
       -moz-user-select: none;
     }
-    
+
     body {
       margin: 0;
       background: #000;
@@ -824,149 +824,175 @@ cat << 'EOL' > editor.html
       height: 100vh;
       overflow: hidden;
     }
-    
+
+    /* ── Sidebar: 2-column grid ── */
     .toolbar {
       position: fixed;
       top: 0;
       left: 0;
-      width: 180px;
+      width: 200px;
       height: 100%;
       background: #efefef;
       border-right: 1px solid #5a5a5a;
       padding: 5px;
       overflow-y: auto;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-auto-rows: min-content;
+      gap: 4px;
+      align-content: start;
     }
-    
+
     .toolbar::-webkit-scrollbar {
       display: none;
     }
-    
-    .toolbar strong {
-      margin-top: 10px;
-      margin-bottom: 5px;
-      font-size: 14px;
+
+    /* Full-width rows: dividers, headers, big controls */
+    .toolbar hr,
+    .toolbar strong,
+    .toolbar .color-picker,
+    .toolbar .containerResize,
+    .toolbar > input[type=file],
+    .toolbar #btnRemoveBg {
+      grid-column: 1 / -1;
     }
-    
+
+    .toolbar strong {
+      margin: 6px 0 2px 0;
+      font-size: 13px;
+      color: #333;
+    }
+
     .toolbar hr {
       border: 0;
       height: 1px;
       background: #c4c4c4;
-      margin: 10px 0;
+      margin: 6px 0;
     }
-    
+
+    /* All buttons fit in a grid cell */
     .toolbar button {
-      margin: 3px 5px;
-      padding: 5px;
+      margin: 0;
+      padding: 6px 4px;
       background-color: #efefef;
       border: 1px solid #c4c4c4;
       cursor: pointer;
-      font-size: 14px;
-      text-align: left;
+      font-size: 13px;
+      text-align: center;
+      justify-content: center;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-height: 28px;
     }
-    
+
     .toolbar button:hover {
       background-color: #d6d6d6;
     }
-    
+
     .toolbar button.selected {
       outline: 2px solid #3a76b1;
       background-color: #dce9f9;
     }
-    
+
     .toolbar button:disabled {
       opacity: 0.4;
       cursor: default;
     }
-    
+
     .toolbar button:disabled:hover {
       background-color: #efefef;
     }
-    
+
+    /* Number inputs span both columns */
     .toolbar input[type=number] {
+      grid-column: 1 / -1;
       width: 100%;
       padding: 5px;
-      margin: 3px 0;
+      margin: 0;
       border: 1px solid #c4c4c4;
       background: #fff;
       font-size: 14px;
     }
-    
+
     .toolbar input[type=number]:disabled {
       background-color: #efefef;
       opacity: 0.4;
     }
-    
+
     .toolbar label {
+      grid-column: 1 / -1;
       display: flex;
       align-items: center;
       gap: 5px;
-      margin: 5px 0;
-      font-size: 14px;
+      margin: 0;
+      font-size: 13px;
     }
-    
+
     .toolbar input[type=checkbox] {
       cursor: pointer;
     }
-    
+
+    /* Color picker spans both columns */
     .color-picker {
-      margin: 5px;
       padding: 5px;
       border: 1px solid #c4c4c4;
+      margin: 0;
     }
-    
+
     .color-picker.disabled {
       opacity: 0.4;
       pointer-events: none;
     }
-    
+
     .color-picker-preview {
       width: 100%;
-      height: 30px;
+      height: 24px;
       border: 1px solid #c4c4c4;
-      margin-bottom: 5px;
+      margin-bottom: 4px;
     }
-    
+
     .color-picker-input {
       width: 100%;
-      padding: 5px;
+      padding: 4px;
       margin: 2px 0;
       border: 1px solid #c4c4c4;
       font-family: monospace;
-      font-size: 12px;
+      font-size: 11px;
     }
-    
+
     .containerResize {
-      padding: 0 5px;
+      padding: 0;
     }
-    
+
     .title {
       text-align: center;
       font-weight: bold;
       margin: 10px 0;
       cursor: default;
     }
-    
+
+    /* ── Workspace matches toolbar width ── */
     .workspace {
       flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-left: 180px;
+      margin-left: 200px;
       overflow: auto;
     }
-    
+
     canvas {
       background: #fff;
       max-width: 100%;
       max-height: 100%;
     }
-    
+
     input[type=file] {
       display: none;
     }
-    
+
     .notification {
       position: fixed;
       top: 20px;
