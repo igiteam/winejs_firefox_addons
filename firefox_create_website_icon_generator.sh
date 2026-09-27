@@ -41,7 +41,7 @@ cd "$EXTNAME" || exit
 
 # Download default icon
 echo -e "${CYAN}📥 Downloading default extension icon...${NC}"
-curl -s -o icons/icon.png "https://cdn.gitgpt.chat/rtx/images/bookmark_website.png"
+curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/wine_firefox_addons/main/images/bookmark-website-logo.png"
 cp icons/icon.png icons/icon128.png
 
 # Create manifest.json
