@@ -1021,7 +1021,9 @@ cat << 'EOL' > editor.html
     <button id="btnRotateLeft">↺ Rotate L</button>
     <button id="btnRotateRight">↻ Rotate R</button>
     <button id="btnCrop">✂ Crop</button>
-    
+    <hr>
+    <button id="btnRemoveBg" class="primary" style="background:#3a76b1; color:white; text-align:center; justify-content:center;">🎭 Remove Background</button>
+
     <hr>
     <strong>Merge</strong>
     <button id="btnMergeH">◫ Merge H</button>
@@ -1064,7 +1066,6 @@ cat << 'EOL' > editor.html
     <button id="btnDownloadWEBPBase64">📄 WebP (Base64)</button>
     
     <hr>
-    <button id="btnRemoveBg" class="primary" style="background:#3a76b1; color:white; text-align:center; justify-content:center;">🎭 Remove Background</button>
   </div>
   
   <div class="workspace">
