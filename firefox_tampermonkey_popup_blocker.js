@@ -9,6 +9,7 @@
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
 // @run-at       document-start
+// @icon         https://logodix.com/logo/49412.png
 // ==/UserScript==
 
 (function () {

@@ -7,6 +7,7 @@
 // @match        *://*/*
 // @grant        none
 // @run-at       document-start
+// @icon         https://logodix.com/logo/49412.png
 // ==/UserScript==
 
 (function () {
