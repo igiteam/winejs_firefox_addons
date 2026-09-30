@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+  "name": "A4 Resizer",
+  "version": "1.0",
+  "description": "Right-click to resize the Firefox window to A4 landscape or portrait at 96 DPI",
+  "icons": {
+    "48": "icons/icon.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "menus",
+    "contextMenus",
+    "activeTab",
+    "tabs"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "a4-resizer@custom.addon",
+      "strict_min_version": "57.0"
+    }
+  }
+}
