@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "Search on Internet Archive",
+  "version": "2.0",
+  "description": "Right-click highlighted text to search it on the Internet Archive (Wayback Machine or Archive.org)",
+  "icons": {
+    "48": "icons/icon.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "menus",
+    "contextMenus",
+    "activeTab"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "search-on-archive@custom.addon",
+      "strict_min_version": "57.0"
+    }
+  }
+}
