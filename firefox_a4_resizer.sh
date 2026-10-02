@@ -13,7 +13,7 @@ NC='\033[0m'
 echo -e "${CYAN}"
 echo "╔═════════════════════════════════════════════════════════════════════════════╗"
 echo "║              A4 Resizer - Firefox Addon                                     ║"
-echo "║    Right-click to resize the Firefox window to A4 at 96 DPI                ║"
+echo "║    Right-click to resize the Firefox window to A4 at 96 DPI                 ║"
 echo "╚═════════════════════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
@@ -34,9 +34,8 @@ mkdir -p "$EXTNAME/icons"
 cd "$EXTNAME" || exit
 
 echo -e "${CYAN}📥 Downloading extension icon...${NC}"
-curl -sL -o icons/icon.png "https://static.vecteezy.com/system/resources/previews/026/530/350/non_2x/a4-size-paper-icon-vector.jpg"
+curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/winejs_firefox_addons/refs/heads/main/images/a4-size-paper-icon-vector.jpg"
 cp icons/icon.png icons/icon128.png
-
 cat << 'EOL' > manifest.json
 {
   "manifest_version": 2,

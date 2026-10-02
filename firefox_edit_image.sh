@@ -15,7 +15,7 @@ NC='\033[0m'
 echo -e "${CYAN}"
 echo "╔═══════════════════════════════════════════════════════════════╗"
 echo "║           TinyIMG Firefox Extension Generator                 ║"
-echo "║     Enhanced features + Original TinyIMG Design              ║"
+echo "║     Enhanced features + Original TinyIMG Design               ║"
 echo "╚═══════════════════════════════════════════════════════════════╝"
 echo -e "${NC}"
 

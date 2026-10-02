@@ -34,7 +34,7 @@ mkdir -p "$EXTNAME/icons"
 cd "$EXTNAME" || exit
 
 echo -e "${CYAN}📥 Downloading default extension icon...${NC}"
-curl -sL -o icons/icon.png "https://img.icons8.com/color/1200/google-maps.jpg"
+curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/winejs_firefox_addons/refs/heads/main/images/google-maps.jpg"
 cp icons/icon.png icons/icon128.png
 
 cat << 'EOL' > manifest.json

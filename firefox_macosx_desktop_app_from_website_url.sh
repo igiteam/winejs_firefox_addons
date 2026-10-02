@@ -41,8 +41,9 @@ cd "$EXTNAME" || exit
 
 # Download default icon
 echo -e "${CYAN}📥 Downloading default extension icon...${NC}"
-curl -sL -o icons/icon.png "https://raw.githubusercontent.com/igiteam/winejs_firefox_addons/refs/heads/main/images/bookmark-website-logo.png"
+curl -s -o icons/icon.png "https://raw.githubusercontent.com/igiteam/winejs_firefox_addons/refs/heads/main/images/bookmark-website-logo.png"
 cp icons/icon.png icons/icon128.png
+
 
 # Create manifest.json
 cat << 'EOL' > manifest.json
