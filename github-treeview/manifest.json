@@ -1,0 +1,41 @@
+{
+  "manifest_version": 2,
+  "name": "Treeview for GitHub",
+  "version": "1.2.0",
+  "description": "Full-screen treeview of any GitHub repo. White GitHub theme. String (copyable) and clickable links modes. Badges for -ai.txt and .patch siblings.",
+  "icons": {
+    "48": "icons/tree.png",
+    "128": "icons/tree128.png"
+  },
+  "permissions": [
+    "menus",
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "storage",
+    "https://api.github.com/*",
+    "https://raw.githubusercontent.com/*",
+    "https://github.com/*"
+  ],
+  "browser_action": {
+    "default_icon": "icons/tree.png",
+    "default_title": "Show repo tree"
+  },
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["content.js"],
+      "css": ["treeview.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "github-treeview@custom.addon",
+      "strict_min_version": "78.0"
+    }
+  }
+}
