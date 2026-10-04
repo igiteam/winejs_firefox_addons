@@ -13,26 +13,18 @@ Two render modes: copyable plain-text string, or clickable links.
 
 Toggle with the two buttons in the header bar.
 
-## Glyphs
+## Header
 
-Rows use the real `tree` branch glyphs:
-repo
-├── engine
-│ ├── Poseidon
-│ │ ├── AI
-│ │ │ ├── AICenter.cpp 28.4 KB
-│ │ │ └── AICenter.hpp 4.2 KB
-│ │ └── Audio
-│ │ └── Voice
-│ │ └── VonApp.cpp 34.1 KB
-│ └── Trident
-│ └── Cargo.toml 1.1 KB
-├── README.md 2.1 KB
-└── CMakeLists.txt 8.4 KB
+One bar, everything in it:
 
-Correct `├─` / `└─` / `│` at every depth — last-child detection
-works because the tree is built as nested nodes and walked
-recursively.
+- `owner/repo@branch` · `N files` · `📄 x` · `🔧 y` · `cached?`
+- filter box
+- expand all / collapse all
+- 📄 string mode / 🔗 links mode
+- 📋 Copy — copies the whole tree as plain text
+- 💾 JSON — downloads the tree as JSON
+- ↻ refresh
+- × close
 
 ## What it does
 
@@ -43,13 +35,9 @@ recursively.
   - 📄 has `-ai.txt`
   - 🔧 has `.patch`
   - ✏️ has `.patch-ai.txt`
-- Ctrl/Cmd+click files → multi-select
 - Right-click a file → copy its path
-- Footer buttons:
-  - 🔗 RAG link → one `rag.songdrop.band/?url=…&url=…` link
-  - 📋 Copy paths → newline-separated paths
-  - 📄 Copy tree → the whole tree as a plain-text string
-  - 💾 JSON → download the tree as JSON
+- 📋 Copy → the whole tree as a plain-text string
+- 💾 JSON → download the tree as JSON
 
 ## Keyboard
 
@@ -60,6 +48,13 @@ recursively.
 
 Cached in `browser.storage.local` for 1 hour per (owner/repo/branch).
 Click ↻ to force a refresh.
+
+## Printing
+
+The body scrolls normally on screen. When you print (Ctrl+P), the
+header is hidden, the body expands to full height, and the whole tree
+flows across as many pages as needed — black on white, no chrome,
+no scrollbars, no shadows. Perfect for a wall chart.
 
 ## Install
 

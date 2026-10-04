@@ -7,7 +7,9 @@
 //   "text"  — plain text, one <pre>, fully selectable & copyable
 //   "links" — same layout, each row is an <a> pointing to GitHub
 //
-// Correct ├─ / └─ / │ glyphs via nested-tree recursion.
+// Single header bar with: repo@branch · stats · filter · expand ·
+// collapse · string/links mode · copy tree · JSON · refresh · close.
+// No footer. Body scrolls. Print-friendly.
 
 (function () {
   const PANEL_ID = "github-treeview-panel";
@@ -23,7 +25,6 @@
     error: null,
     filter: "",
     collapsed: new Set(),
-    selected: new Set(),
     mode: "text"     // "text" | "links"
   };
 
@@ -123,7 +124,6 @@
         });
       }
 
-      // If collapsed, don't recurse
       if (node.isDir && state.collapsed.has(node.path) && depth >= 0) {
         return;
       }
@@ -222,9 +222,13 @@
       }
     });
 
-    body.innerHTML = `<pre class="gtv-pre">${linesHtml.join("")}</pre>`;
+    // Rows are display:block, so no \n join — that would double-space.
+    const titleLine = state.owner
+      ? `<span class="gtv-titleline">${escapeHtml(state.owner + "/" + state.repo + "@" + state.branch)}</span>\n`
+      : "";
+    body.innerHTML = `<pre class="gtv-pre">${titleLine}${linesHtml.join("")}</pre>`;
 
-    // Wire interactions
+    // Wire interactions (directories toggle collapse)
     body.querySelectorAll(".gtv-line").forEach(el => {
       const kind = el.dataset.kind;
       const path = el.dataset.path;
@@ -237,16 +241,6 @@
           renderBody();
         });
       } else {
-        el.addEventListener("click", (e) => {
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            if (state.selected.has(path)) state.selected.delete(path);
-            else state.selected.add(path);
-            renderBody();
-            renderFooter();
-          }
-        });
-
         el.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           copyToClipboard(path);
@@ -257,7 +251,7 @@
   }
 
   // -----------------------------------------------------------
-  // Panel — single header bar, everything in it
+  // Panel — single header bar, everything in it. No footer.
   // -----------------------------------------------------------
   function buildPanel() {
     const panel = document.createElement("div");
@@ -271,19 +265,13 @@
         <button class="gtv-btn" data-act="collapse-all" title="Collapse all">⤡</button>
         <button class="gtv-btn gtv-btn-txt gtv-btn-active" data-act="mode-text" title="Plain string, copyable">📄</button>
         <button class="gtv-btn gtv-btn-txt" data-act="mode-links" title="Clickable rows">🔗</button>
+        <button class="gtv-btn gtv-btn-txt" data-act="copy-tree" title="Copy the tree as plain text">📋 Copy</button>
+        <button class="gtv-btn gtv-btn-txt" data-act="save-json" title="Download the tree as JSON">💾 JSON</button>
         <button class="gtv-btn" data-act="refresh" title="Re-fetch tree">↻</button>
         <button class="gtv-btn" data-act="close" title="Close (Esc)">×</button>
       </div>
       <div class="gtv-body">
         <div class="gtv-loading">Loading…</div>
-      </div>
-      <div class="gtv-footer">
-        <span class="gtv-sel-info">0 selected</span>
-        <span class="gtv-spacer"></span>
-        <button class="gtv-btn gtv-btn-txt" data-act="copy-rag" disabled>🔗 RAG link</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="copy-paths" disabled>📋 Copy paths</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="copy-tree" title="Copy the tree as plain text">📄 Copy tree</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="save-json" disabled>💾 JSON</button>
       </div>
     `;
     document.body.appendChild(panel);
@@ -303,8 +291,6 @@
       if (act === "collapse-all") { collapseAll(); renderBody(); return; }
       if (act === "mode-text") { state.mode = "text"; renderModeButtons(); renderBody(); return; }
       if (act === "mode-links") { state.mode = "links"; renderModeButtons(); renderBody(); return; }
-      if (act === "copy-rag") return copyRagLink();
-      if (act === "copy-paths") return copySelectedPaths();
       if (act === "copy-tree") return copyTreeAsText();
       if (act === "save-json") return saveJson();
     });
@@ -364,19 +350,6 @@
     stats.textContent = ` · ${total} files · 📄 ${ai} · 🔧 ${patch}` + (state.cached ? " · cached" : "");
   }
 
-  function renderFooter() {
-    const p = getPanel();
-    if (!p) return;
-    const info = p.querySelector(".gtv-sel-info");
-    const n = state.selected.size;
-    info.textContent = n + " selected";
-    p.querySelector('[data-act="copy-rag"]').disabled = n === 0;
-    p.querySelector('[data-act="copy-paths"]').disabled = n === 0;
-    p.querySelector('[data-act="save-json"]').disabled = state.files.length === 0;
-    const ct = p.querySelector('[data-act="copy-tree"]');
-    if (ct) ct.disabled = state.files.length === 0;
-  }
-
   function flashRow(el, msg) {
     const note = document.createElement("span");
     note.className = "gtv-flash";
@@ -399,28 +372,6 @@
       document.execCommand("copy");
       ta.remove();
     }
-  }
-
-  async function copySelectedPaths() {
-    const paths = [...state.selected].sort().join("\n");
-    await copyToClipboard(paths);
-    showToast(`Copied ${state.selected.size} paths`);
-  }
-
-  async function copyRagLink() {
-    const base = "https://rag.songdrop.band/?";
-    const params = [];
-    for (const path of state.selected) {
-      const f = state.files.find(x => x.path === path);
-      if (!f) continue;
-      const targetPath = f.hasAiTxt ? path + "-ai.txt" : path;
-      const raw = `https://raw.githubusercontent.com/${state.owner}/${state.repo}/${state.branch}/${targetPath}`;
-      params.push("url=" + encodeURIComponent(raw));
-    }
-    if (state.selected.size > 2) params.push("deep=1");
-    const link = base + params.join("&");
-    await copyToClipboard(link);
-    showToast(`RAG link copied (${state.selected.size} files)`);
   }
 
   // Copy the entire tree as one plain-text string — exactly what
@@ -502,7 +453,6 @@
       state.error = (resp && resp.error) || "Failed to load tree";
       renderBody();
       renderHeader();
-      renderFooter();
       return;
     }
 
@@ -516,7 +466,6 @@
 
     renderHeader();
     renderBody();
-    renderFooter();
     renderModeButtons();
   }
 

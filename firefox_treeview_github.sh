@@ -63,7 +63,7 @@ cat << 'EOL' > manifest.json
 {
   "manifest_version": 2,
   "name": "Treeview for GitHub",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "Full-screen treeview of any GitHub repo. White GitHub theme. String (copyable) and clickable links modes. Badges for -ai.txt and .patch siblings.",
   "icons": {
     "48": "icons/tree.png",
@@ -302,7 +302,9 @@ cat << 'EOL' > content.js
 //   "text"  — plain text, one <pre>, fully selectable & copyable
 //   "links" — same layout, each row is an <a> pointing to GitHub
 //
-// Correct ├─ / └─ / │ glyphs via nested-tree recursion.
+// Single header bar with: repo@branch · stats · filter · expand ·
+// collapse · string/links mode · copy tree · JSON · refresh · close.
+// No footer. Body scrolls. Print-friendly.
 
 (function () {
   const PANEL_ID = "github-treeview-panel";
@@ -318,7 +320,6 @@ cat << 'EOL' > content.js
     error: null,
     filter: "",
     collapsed: new Set(),
-    selected: new Set(),
     mode: "text"     // "text" | "links"
   };
 
@@ -418,7 +419,6 @@ cat << 'EOL' > content.js
         });
       }
 
-      // If collapsed, don't recurse
       if (node.isDir && state.collapsed.has(node.path) && depth >= 0) {
         return;
       }
@@ -517,9 +517,13 @@ cat << 'EOL' > content.js
       }
     });
 
-    body.innerHTML = `<pre class="gtv-pre">${linesHtml.join("")}</pre>`;
+    // Rows are display:block, so no \n join — that would double-space.
+    const titleLine = state.owner
+      ? `<span class="gtv-titleline">${escapeHtml(state.owner + "/" + state.repo + "@" + state.branch)}</span>\n`
+      : "";
+    body.innerHTML = `<pre class="gtv-pre">${titleLine}${linesHtml.join("")}</pre>`;
 
-    // Wire interactions
+    // Wire interactions (directories toggle collapse)
     body.querySelectorAll(".gtv-line").forEach(el => {
       const kind = el.dataset.kind;
       const path = el.dataset.path;
@@ -532,16 +536,6 @@ cat << 'EOL' > content.js
           renderBody();
         });
       } else {
-        el.addEventListener("click", (e) => {
-          if (e.ctrlKey || e.metaKey) {
-            e.preventDefault();
-            if (state.selected.has(path)) state.selected.delete(path);
-            else state.selected.add(path);
-            renderBody();
-            renderFooter();
-          }
-        });
-
         el.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           copyToClipboard(path);
@@ -552,7 +546,7 @@ cat << 'EOL' > content.js
   }
 
   // -----------------------------------------------------------
-  // Panel — single header bar, everything in it
+  // Panel — single header bar, everything in it. No footer.
   // -----------------------------------------------------------
   function buildPanel() {
     const panel = document.createElement("div");
@@ -566,19 +560,13 @@ cat << 'EOL' > content.js
         <button class="gtv-btn" data-act="collapse-all" title="Collapse all">⤡</button>
         <button class="gtv-btn gtv-btn-txt gtv-btn-active" data-act="mode-text" title="Plain string, copyable">📄</button>
         <button class="gtv-btn gtv-btn-txt" data-act="mode-links" title="Clickable rows">🔗</button>
+        <button class="gtv-btn gtv-btn-txt" data-act="copy-tree" title="Copy the tree as plain text">📋 Copy</button>
+        <button class="gtv-btn gtv-btn-txt" data-act="save-json" title="Download the tree as JSON">💾 JSON</button>
         <button class="gtv-btn" data-act="refresh" title="Re-fetch tree">↻</button>
         <button class="gtv-btn" data-act="close" title="Close (Esc)">×</button>
       </div>
       <div class="gtv-body">
         <div class="gtv-loading">Loading…</div>
-      </div>
-      <div class="gtv-footer">
-        <span class="gtv-sel-info">0 selected</span>
-        <span class="gtv-spacer"></span>
-        <button class="gtv-btn gtv-btn-txt" data-act="copy-rag" disabled>🔗 RAG link</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="copy-paths" disabled>📋 Copy paths</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="copy-tree" title="Copy the tree as plain text">📄 Copy tree</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="save-json" disabled>💾 JSON</button>
       </div>
     `;
     document.body.appendChild(panel);
@@ -598,8 +586,6 @@ cat << 'EOL' > content.js
       if (act === "collapse-all") { collapseAll(); renderBody(); return; }
       if (act === "mode-text") { state.mode = "text"; renderModeButtons(); renderBody(); return; }
       if (act === "mode-links") { state.mode = "links"; renderModeButtons(); renderBody(); return; }
-      if (act === "copy-rag") return copyRagLink();
-      if (act === "copy-paths") return copySelectedPaths();
       if (act === "copy-tree") return copyTreeAsText();
       if (act === "save-json") return saveJson();
     });
@@ -659,19 +645,6 @@ cat << 'EOL' > content.js
     stats.textContent = ` · ${total} files · 📄 ${ai} · 🔧 ${patch}` + (state.cached ? " · cached" : "");
   }
 
-  function renderFooter() {
-    const p = getPanel();
-    if (!p) return;
-    const info = p.querySelector(".gtv-sel-info");
-    const n = state.selected.size;
-    info.textContent = n + " selected";
-    p.querySelector('[data-act="copy-rag"]').disabled = n === 0;
-    p.querySelector('[data-act="copy-paths"]').disabled = n === 0;
-    p.querySelector('[data-act="save-json"]').disabled = state.files.length === 0;
-    const ct = p.querySelector('[data-act="copy-tree"]');
-    if (ct) ct.disabled = state.files.length === 0;
-  }
-
   function flashRow(el, msg) {
     const note = document.createElement("span");
     note.className = "gtv-flash";
@@ -694,28 +667,6 @@ cat << 'EOL' > content.js
       document.execCommand("copy");
       ta.remove();
     }
-  }
-
-  async function copySelectedPaths() {
-    const paths = [...state.selected].sort().join("\n");
-    await copyToClipboard(paths);
-    showToast(`Copied ${state.selected.size} paths`);
-  }
-
-  async function copyRagLink() {
-    const base = "https://rag.songdrop.band/?";
-    const params = [];
-    for (const path of state.selected) {
-      const f = state.files.find(x => x.path === path);
-      if (!f) continue;
-      const targetPath = f.hasAiTxt ? path + "-ai.txt" : path;
-      const raw = `https://raw.githubusercontent.com/${state.owner}/${state.repo}/${state.branch}/${targetPath}`;
-      params.push("url=" + encodeURIComponent(raw));
-    }
-    if (state.selected.size > 2) params.push("deep=1");
-    const link = base + params.join("&");
-    await copyToClipboard(link);
-    showToast(`RAG link copied (${state.selected.size} files)`);
   }
 
   // Copy the entire tree as one plain-text string — exactly what
@@ -797,7 +748,6 @@ cat << 'EOL' > content.js
       state.error = (resp && resp.error) || "Failed to load tree";
       renderBody();
       renderHeader();
-      renderFooter();
       return;
     }
 
@@ -811,7 +761,6 @@ cat << 'EOL' > content.js
 
     renderHeader();
     renderBody();
-    renderFooter();
     renderModeButtons();
   }
 
@@ -847,7 +796,8 @@ cat << 'EOL' > content.js
 EOL
 
 # ---------------------------------------------------------------
-# treeview.css — white GitHub theme, single header, tight rows
+# treeview.css — white GitHub theme, single header, tight rows,
+# scrollable body, print-friendly.
 # ---------------------------------------------------------------
 cat << 'EOL' > treeview.css
 /* ============================================================
@@ -877,8 +827,10 @@ cat << 'EOL' > treeview.css
   padding: 8px 16px;
   background: #ffffff;
   border-bottom: 1px solid #d0d7de;
-  height: 52px;
+  min-height: 52px;
   flex-shrink: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .gtv-title {
@@ -925,7 +877,7 @@ cat << 'EOL' > treeview.css
 
 .gtv-btn-txt {
   width: auto;
-  padding: 0 8px;
+  padding: 0 10px;
   font-size: 13px;
   gap: 4px;
 }
@@ -957,13 +909,14 @@ cat << 'EOL' > treeview.css
   box-shadow: 0 0 0 3px rgba(9,105,218,0.15);
 }
 
-/* ---------- Body ---------- */
+/* ---------- Body — properly scrollable ---------- */
 .gtv-body {
-  flex: 1;
+  flex: 1 1 auto;
   overflow: auto;
   background: #ffffff;
   min-height: 0;
   padding: 0;
+  scrollbar-gutter: stable;
 }
 
 .gtv-pre {
@@ -1028,24 +981,6 @@ a.gtv-line:visited { color: inherit; }
 }
 .gtv-error { color: #cf222e; }
 
-/* ---------- Footer ---------- */
-.gtv-footer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #f6f8fa;
-  border-top: 1px solid #d0d7de;
-  height: 52px;
-  flex-shrink: 0;
-}
-
-.gtv-sel-info {
-  color: #57606a;
-  font-size: 13px;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-}
-
 .gtv-flash {
   margin-left: 8px;
   color: #1a7f37;
@@ -1081,6 +1016,69 @@ a.gtv-line:visited { color: inherit; }
   border: 3px solid #ffffff;
 }
 #github-treeview-panel ::-webkit-scrollbar-thumb:hover { background: #8b949e; }
+
+/* ============================================================
+   PRINT — full tree across pages, no chrome, black on white
+   ============================================================ */
+@media print {
+  @page { margin: 12mm; }
+
+  html, body {
+    background: #ffffff !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* Hide everything on the page except our panel */
+  body > *:not(#github-treeview-panel) { display: none !important; }
+
+  #github-treeview-panel {
+    position: static !important;
+    inset: auto !important;
+    width: auto !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    display: block !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Hide the interactive header entirely when printing */
+  .gtv-header { display: none !important; }
+
+  /* Body: no scroll, no clipping — let it flow across pages */
+  .gtv-body {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  .gtv-pre {
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 10pt !important;
+    line-height: 1.15 !important;
+    color: #000 !important;
+    background: transparent !important;
+  }
+
+  .gtv-line { color: #000 !important; background: transparent !important; }
+  .gtv-line:hover { background: transparent !important; }
+  .gtv-glyph { color: #555 !important; }
+  .gtv-name  { color: #000 !important; }
+  .gtv-dirname { color: #000 !important; font-weight: 700 !important; }
+  .gtv-size { color: #333 !important; }
+  .gtv-badge { color: #000 !important; }
+
+  /* No toast when printing */
+  .gtv-toast { display: none !important; }
+}
 EOL
 
 # ---------------------------------------------------------------
@@ -1102,26 +1100,18 @@ Two render modes: copyable plain-text string, or clickable links.
 
 Toggle with the two buttons in the header bar.
 
-## Glyphs
+## Header
 
-Rows use the real `tree` branch glyphs:
-repo
-├── engine
-│ ├── Poseidon
-│ │ ├── AI
-│ │ │ ├── AICenter.cpp 28.4 KB
-│ │ │ └── AICenter.hpp 4.2 KB
-│ │ └── Audio
-│ │ └── Voice
-│ │ └── VonApp.cpp 34.1 KB
-│ └── Trident
-│ └── Cargo.toml 1.1 KB
-├── README.md 2.1 KB
-└── CMakeLists.txt 8.4 KB
+One bar, everything in it:
 
-Correct `├─` / `└─` / `│` at every depth — last-child detection
-works because the tree is built as nested nodes and walked
-recursively.
+- `owner/repo@branch` · `N files` · `📄 x` · `🔧 y` · `cached?`
+- filter box
+- expand all / collapse all
+- 📄 string mode / 🔗 links mode
+- 📋 Copy — copies the whole tree as plain text
+- 💾 JSON — downloads the tree as JSON
+- ↻ refresh
+- × close
 
 ## What it does
 
@@ -1132,13 +1122,9 @@ recursively.
   - 📄 has `-ai.txt`
   - 🔧 has `.patch`
   - ✏️ has `.patch-ai.txt`
-- Ctrl/Cmd+click files → multi-select
 - Right-click a file → copy its path
-- Footer buttons:
-  - 🔗 RAG link → one `rag.songdrop.band/?url=…&url=…` link
-  - 📋 Copy paths → newline-separated paths
-  - 📄 Copy tree → the whole tree as a plain-text string
-  - 💾 JSON → download the tree as JSON
+- 📋 Copy → the whole tree as a plain-text string
+- 💾 JSON → download the tree as JSON
 
 ## Keyboard
 
@@ -1149,6 +1135,13 @@ recursively.
 
 Cached in `browser.storage.local` for 1 hour per (owner/repo/branch).
 Click ↻ to force a refresh.
+
+## Printing
+
+The body scrolls normally on screen. When you print (Ctrl+P), the
+header is hidden, the body expands to full height, and the whole tree
+flows across as many pages as needed — black on white, no chrome,
+no scrollbars, no shadows. Perfect for a wall chart.
 
 ## Install
 
@@ -1258,9 +1251,8 @@ echo ""
 echo -e "${YELLOW} USAGE:${NC}"
 echo -e "  • Open any github.com/<owner>/<repo> page"
 echo -e "  • Click the toolbar button, or press Ctrl+Shift+T"
-echo -e "  • Full-screen white GitHub-themed tree appears"
-echo -e "  • Header: repo@branch · stats · filter · expand/collapse · 📄/🔗 · ↻ · ×"
+echo -e "  • Header: repo@branch · stats · filter · expand/collapse · 📄/🔗 · 📋 Copy · 💾 JSON · ↻ · ×"
 echo -e "  • In string mode the tree is one copyable <pre> block"
 echo -e "  • In links mode each row opens on GitHub"
-echo -e "  • Ctrl+click files to multi-select, then footer buttons light up"
+echo -e "  • Ctrl+P prints the full tree across pages, no chrome"
 echo -e "  • Esc to close"
