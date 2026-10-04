@@ -48,14 +48,16 @@
             background: 'rgba(15,15,20,0.97)',
             color: '#e0e0e0',
             font: '12px/1.5 monospace',
-            padding: '12px 14px',
+            padding: '0',
             borderRadius: '8px',
             maxWidth: '480px',
-            maxHeight: '45vh',
-            overflow: 'auto',
+            width: '480px',
+            maxHeight: '60vh',
+            overflow: 'hidden',
             boxShadow: '0 8px 30px rgba(0,0,0,0.55)',
             border: '1px solid #00e5ff',
-            display: 'none'
+            display: 'none',
+            flexDirection: 'column'
         });
 
         document.documentElement.appendChild(box);
@@ -104,13 +106,11 @@
         return parts.join(' > ');
     }
 
-    // ── Clean HTML preview of the element ─────────────────────
-    function getHtmlPreview(el, maxLen = 800) {
+    // ── Clean HTML preview of the element (unlimited) ─────────
+    function getHtmlPreview(el) {
         const clone = el.cloneNode(true);
         clone.querySelectorAll('script,style').forEach(n => n.remove());
-        let html = clone.outerHTML;
-        if (html.length > maxLen) html = html.slice(0, maxLen) + '\n… (truncated)';
-        return html;
+        return clone.outerHTML;
     }
 
     // ── Copy to clipboard ─────────────────────────────────────
@@ -138,29 +138,53 @@
         const esc = (s) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
         panel.innerHTML = `
-            <div style="color:#00e5ff;font-weight:bold;margin-bottom:6px;">🎯 Element Picked</div>
-            <div style="margin-bottom:8px;">
-                <span style="color:#888;">Selector:</span><br>
-                <code style="color:#7CFC00;word-break:break-all;">${esc(selector)}</code>
+            <div style="
+                display:flex; justify-content:space-between; align-items:center;
+                padding:10px 14px;
+                background:rgba(0,229,255,0.08);
+                border-bottom:1px solid rgba(0,229,255,0.3);
+                color:#00e5ff; font-weight:bold;
+                flex-shrink:0;
+            ">
+                <span>🎯 Element Picked</span>
+                <span id="ep-close" style="cursor:pointer;padding:2px 8px;border-radius:4px;background:rgba(255,255,255,0.08);">✕</span>
             </div>
-            <div style="margin-bottom:8px;">
-                <span style="color:#888;">Tag:</span> ${el.tagName.toLowerCase()}
-                ${el.id ? `| <span style="color:#888;">ID:</span> ${esc(el.id)}` : ''}
-                ${el.className ? `| <span style="color:#888;">Class:</span> ${esc(el.className.toString())}` : ''}
+
+            <div id="ep-body" style="
+                padding:10px 14px;
+                overflow-y:auto;
+                flex:1 1 auto;
+                min-height:0;
+            ">
+                <div style="margin-bottom:8px;">
+                    <span style="color:#888;">Selector:</span><br>
+                    <code style="color:#7CFC00;word-break:break-all;">${esc(selector)}</code>
+                </div>
+                <div style="margin-bottom:8px;">
+                    <span style="color:#888;">Tag:</span> ${el.tagName.toLowerCase()}
+                    ${el.id ? `| <span style="color:#888;">ID:</span> ${esc(el.id)}` : ''}
+                    ${el.className ? `| <span style="color:#888;">Class:</span> ${esc(el.className.toString())}` : ''}
+                </div>
+                ${text ? `<div style="margin-bottom:8px;"><span style="color:#888;">Text:</span> ${esc(text)}</div>` : ''}
+                <div style="margin-bottom:8px;">
+                    <span style="color:#888;">HTML:</span><br>
+                    <pre style="color:#ffb86c;white-space:pre-wrap;word-break:break-all;margin:4px 0;background:#000;padding:6px;border-radius:4px;max-height:150px;overflow:auto;">${esc(html)}</pre>
+                </div>
             </div>
-            ${text ? `<div style="margin-bottom:8px;"><span style="color:#888;">Text:</span> ${esc(text)}</div>` : ''}
-            <div style="margin-bottom:8px;">
-                <span style="color:#888;">HTML:</span><br>
-                <pre style="color:#ffb86c;white-space:pre-wrap;word-break:break-all;margin:4px 0;background:#000;padding:6px;border-radius:4px;max-height:150px;overflow:auto;">${esc(html)}</pre>
-            </div>
-            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+
+            <div style="
+                display:flex; gap:8px;
+                padding:10px 14px;
+                background:rgba(0,0,0,0.35);
+                border-top:1px solid rgba(0,229,255,0.3);
+                flex-shrink:0;
+            ">
                 <button id="ep-copy-sel" style="flex:1;padding:6px;background:#00e5ff;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">📋 Copy Selector</button>
                 <button id="ep-copy-html" style="flex:1;padding:6px;background:#ffb86c;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">📋 Copy HTML</button>
                 <button id="ep-copy-tm" style="flex:1;padding:6px;background:#7CFC00;border:none;border-radius:4px;cursor:pointer;font-weight:bold;">📋 Copy TM Snippet</button>
-                <button id="ep-close" style="padding:6px 10px;background:#444;color:#fff;border:none;border-radius:4px;cursor:pointer;">✕</button>
             </div>
         `;
-        panel.style.display = 'block';
+        panel.style.display = 'flex';
 
         panel.querySelector('#ep-copy-sel').onclick = () => {
             copy(selector);

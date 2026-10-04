@@ -3,7 +3,7 @@
 Firefox addon. Hover any element → cyan highlight box. Click it → panel with:
 - CSS **selector**
 - **tag / id / class**
-- **HTML** preview
+- **HTML** preview (unlimited)
 - Ready-to-use **Tampermonkey snippet**
 
 Toggle with **Alt+Shift+E**, the toolbar button, or right-click → "🎯 Element Picker: Start".
