@@ -1,35 +1,35 @@
 // Popup script for TinyIMG Editor
 document.addEventListener('DOMContentLoaded', function() {
   console.log("Popup loaded");
-  
+
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('configure') === 'api') {
     document.getElementById('apiKey').focus();
     showStatus('Enter your remove.bg API key', 'warning');
   }
-  
+
   loadApiKey();
-  
+
   document.getElementById('openEditor').addEventListener('click', () => {
     browser.tabs.create({
       url: browser.runtime.getURL('editor.html'),
       active: true
     });
   });
-  
+
   document.getElementById('uploadImage').addEventListener('click', () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    
+
     input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
         showStatus('Processing image...', 'warning');
-        
+
         try {
           const imageData = await fileToDataURL(file);
-          
+
           browser.runtime.sendMessage({
             action: 'setImageData',
             imageData: imageData
@@ -44,19 +44,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       }
     };
-    
+
     input.click();
   });
-  
+
   document.getElementById('currentPageImages').addEventListener('click', () => {
     showStatus('Looking for images...', 'warning');
-    
+
     browser.tabs.query({active: true, currentWindow: true}).then(tabs => {
       if (!tabs[0] || tabs[0].url.startsWith('about:') || tabs[0].url.startsWith('chrome:')) {
         showStatus('No webpage with images', 'error');
         return;
       }
-      
+
       browser.tabs.sendMessage(tabs[0].id, {action: 'getCurrentImage'}).then(response => {
         if (response.success && response.url) {
           browser.runtime.sendMessage({
@@ -76,9 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   });
-  
+
   document.getElementById('saveApiKey').addEventListener('click', saveApiKey);
-  
+
   document.getElementById('apiKey').addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       saveApiKey();
@@ -100,18 +100,18 @@ function loadApiKey() {
 function saveApiKey() {
   const apiKeyInput = document.getElementById('apiKey');
   const apiKey = apiKeyInput.value.trim();
-  
+
   if (!apiKey) {
     showStatus('Please enter an API key', 'error');
     apiKeyInput.focus();
     return;
   }
-  
+
   const saveBtn = document.getElementById('saveApiKey');
   const originalText = saveBtn.textContent;
   saveBtn.textContent = 'Saving...';
   saveBtn.disabled = true;
-  
+
   browser.runtime.sendMessage({
     action: 'saveApiKey',
     apiKey: apiKey
@@ -142,7 +142,7 @@ function showStatus(message, type) {
   const statusEl = document.getElementById('status');
   statusEl.textContent = message;
   statusEl.className = 'status ' + type;
-  
+
   setTimeout(() => {
     statusEl.className = 'status';
     statusEl.textContent = '';

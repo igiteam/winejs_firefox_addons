@@ -11,7 +11,7 @@ Two render modes: copyable plain-text string, or clickable links.
 - **🔗 links** — same layout and glyphs, but each row is an `<a href>`.
   Files open on GitHub in a new tab. Directories toggle collapse.
 
-Toggle with the two buttons in the toolbar.
+Toggle with the two buttons in the header bar.
 
 ## Glyphs
 

@@ -161,7 +161,7 @@
     const body = p.querySelector(".gtv-body");
 
     if (state.loading) {
-      body.innerHTML = `<div class="gtv-loading">Loading tree…</div>`;
+      body.innerHTML = `<div class="gtv-loading">Loading…</div>`;
       return;
     }
     if (state.error) {
@@ -222,7 +222,7 @@
       }
     });
 
-    body.innerHTML = `<pre class="gtv-pre">${linesHtml.join("\n")}</pre>`;
+    body.innerHTML = `<pre class="gtv-pre">${linesHtml.join("")}</pre>`;
 
     // Wire interactions
     body.querySelectorAll(".gtv-line").forEach(el => {
@@ -257,30 +257,25 @@
   }
 
   // -----------------------------------------------------------
-  // Panel
+  // Panel — single header bar, everything in it
   // -----------------------------------------------------------
   function buildPanel() {
     const panel = document.createElement("div");
     panel.id = PANEL_ID;
     panel.innerHTML = `
       <div class="gtv-header">
-        <span class="gtv-icon">🌲</span>
-        <span class="gtv-title">repo tree</span>
+        <span class="gtv-title"></span>
         <span class="gtv-stats"></span>
-        <span class="gtv-spacer"></span>
+        <input type="text" class="gtv-filter" placeholder="filter paths..." spellcheck="false">
+        <button class="gtv-btn" data-act="expand-all" title="Expand all">⤢</button>
+        <button class="gtv-btn" data-act="collapse-all" title="Collapse all">⤡</button>
+        <button class="gtv-btn gtv-btn-txt gtv-btn-active" data-act="mode-text" title="Plain string, copyable">📄</button>
+        <button class="gtv-btn gtv-btn-txt" data-act="mode-links" title="Clickable rows">🔗</button>
         <button class="gtv-btn" data-act="refresh" title="Re-fetch tree">↻</button>
         <button class="gtv-btn" data-act="close" title="Close (Esc)">×</button>
       </div>
-      <div class="gtv-toolbar">
-        <input type="text" class="gtv-filter" placeholder="filter paths..." spellcheck="false">
-        <button class="gtv-btn gtv-btn-txt" data-act="expand-all" title="Expand all">⤢ expand</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="collapse-all" title="Collapse all">⤡ collapse</button>
-        <span class="gtv-spacer"></span>
-        <button class="gtv-btn gtv-btn-txt gtv-btn-active" data-act="mode-text" title="Plain string, copyable">📄 string</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="mode-links" title="Same layout, clickable rows">🔗 links</button>
-      </div>
       <div class="gtv-body">
-        <div class="gtv-loading">Loading tree…</div>
+        <div class="gtv-loading">Loading…</div>
       </div>
       <div class="gtv-footer">
         <span class="gtv-sel-info">0 selected</span>
@@ -359,7 +354,7 @@
     const title = p.querySelector(".gtv-title");
     if (!state.owner) {
       stats.textContent = "";
-      title.textContent = "repo tree";
+      title.textContent = "";
       return;
     }
     title.textContent = `${state.owner}/${state.repo}@${state.branch}`;

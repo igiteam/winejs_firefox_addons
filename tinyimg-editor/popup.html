@@ -14,18 +14,18 @@
       user-select: none;
       -moz-user-select: none;
     }
-    
+
     body {
       width: 260px;
       background: #efefef;
       color: #000;
       overflow: hidden;
     }
-    
+
     .container {
       padding: 8px;
     }
-    
+
     .title {
       text-align: center;
       font-weight: bold;
@@ -34,7 +34,7 @@
       border-bottom: 1px solid #c4c4c4;
       color: #333;
     }
-    
+
     button {
       width: 100%;
       padding: 8px 12px;
@@ -48,31 +48,31 @@
       align-items: center;
       gap: 8px;
     }
-    
+
     button:hover {
       background-color: #d6d6d6;
     }
-    
+
     button.primary {
       background-color: #3a76b1;
       border-color: #2a5a8c;
       color: white;
     }
-    
+
     button.primary:hover {
       background-color: #2a5a8c;
     }
-    
+
     .section {
       margin: 12px 0;
       padding: 8px 0;
       border-top: 1px solid #c4c4c4;
     }
-    
+
     .section:first-of-type {
       border-top: none;
     }
-    
+
     .api-input {
       width: 100%;
       padding: 6px;
@@ -81,11 +81,11 @@
       background: #fff;
       font-family: monospace;
     }
-    
+
     .api-input:focus {
       outline: 1px solid #3a76b1;
     }
-    
+
     .status {
       margin-top: 8px;
       padding: 6px;
@@ -94,41 +94,41 @@
       background: #fff;
       border: 1px solid #c4c4c4;
     }
-    
+
     .status.success {
       background: #e8f0fe;
       border-color: #3a76b1;
       display: block;
     }
-    
+
     .status.error {
       background: #ffe8e8;
       border-color: #d83e3e;
       display: block;
     }
-    
+
     .status.warning {
       background: #fff3e0;
       border-color: #f0ad4e;
       display: block;
     }
-    
+
     .help-text {
       font-size: 11px;
       color: #666;
       margin-top: 8px;
       line-height: 1.4;
     }
-    
+
     .help-text a {
       color: #3a76b1;
       text-decoration: none;
     }
-    
+
     .help-text a:hover {
       text-decoration: underline;
     }
-    
+
     hr {
       border: none;
       border-top: 1px solid #c4c4c4;
@@ -139,40 +139,40 @@
 <body>
   <div class="container">
     <div class="title">TinyIMG Editor</div>
-    
+
     <button id="openEditor">
       <span>📁</span> Open Editor
     </button>
-    
+
     <button id="uploadImage">
       <span>📤</span> Upload Image
     </button>
-    
+
     <button id="currentPageImages">
       <span>🌐</span> Page Images
     </button>
-    
+
     <hr>
-    
+
     <div style="font-weight: bold; margin: 8px 0 4px 0;">remove.bg API Key</div>
     <input type="password" id="apiKey" class="api-input" placeholder="Enter API key">
     <button id="saveApiKey" style="text-align: center; justify-content: center;">Save API Key</button>
-    
+
     <div id="status" class="status"></div>
-    
+
     <div class="help-text">
       • Get free API key: <a href="https://www.remove.bg/api#api-key" target="_blank">remove.bg/api</a><br>
       • 50 free calls/month<br>
       • Key stored locally
     </div>
-    
+
     <hr>
-    
+
     <div style="font-size: 11px; color: #666; text-align: center;">
       Right-click any image on any webpage for quick access
     </div>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html>

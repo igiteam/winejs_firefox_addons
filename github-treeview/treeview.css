@@ -17,28 +17,28 @@
   overflow: hidden;
 }
 
-/* ---------- Header ---------- */
+/* ---------- Header — ONE bar, everything in it ---------- */
 .gtv-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
+  gap: 8px;
+  padding: 8px 16px;
   background: #ffffff;
   border-bottom: 1px solid #d0d7de;
-  height: 56px;
+  height: 52px;
   flex-shrink: 0;
 }
-
-.gtv-icon { font-size: 18px; line-height: 1; }
 
 .gtv-title {
   font-weight: 600;
   color: #24292f;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 40vw;
+  max-width: 30vw;
+  flex-shrink: 1;
 }
 
 .gtv-stats {
@@ -46,8 +46,7 @@
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .gtv-spacer { flex: 1; }
@@ -57,13 +56,13 @@
   border: 1px solid #d0d7de;
   color: #24292f;
   cursor: pointer;
-  min-width: 32px;
-  height: 32px;
+  min-width: 30px;
+  height: 30px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
   padding: 0 8px;
   font-family: inherit;
@@ -74,9 +73,9 @@
 
 .gtv-btn-txt {
   width: auto;
-  padding: 0 12px;
+  padding: 0 8px;
   font-size: 13px;
-  gap: 6px;
+  gap: 4px;
 }
 
 .gtv-btn-active {
@@ -86,28 +85,18 @@
 }
 .gtv-btn-active:hover { background: #0860ca; border-color: #0860ca; }
 
-/* ---------- Toolbar ---------- */
-.gtv-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #ffffff;
-  border-bottom: 1px solid #d0d7de;
-  flex-shrink: 0;
-}
-
 .gtv-filter {
   flex: 1;
-  max-width: 520px;
+  min-width: 120px;
+  max-width: 320px;
   background: #ffffff;
   border: 1px solid #d0d7de;
   color: #24292f;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  height: 32px;
+  height: 30px;
 }
 .gtv-filter::placeholder { color: #6e7781; }
 .gtv-filter:focus {
@@ -128,26 +117,25 @@
 .gtv-pre {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 12.5px;
-  line-height: 1.5;
+  line-height: 1.2;
   white-space: pre;
-  padding: 16px 24px 60px;
+  padding: 8px 16px 40px;
   margin: 0;
   color: #24292f;
   min-width: 100%;
-  display: inline-block;
+  display: block;
   tab-size: 4;
 }
 
-/* Each line is one row. In string mode it's a <span>.
-   In links mode it's an <a>. Visually identical. */
+/* Zero gaps between rows — tight like `tree` output */
 .gtv-line {
   display: block;
   white-space: pre;
   color: inherit;
   text-decoration: none;
-  padding: 0 4px;
-  margin: 0 -4px;
-  border-radius: 3px;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
   cursor: default;
 }
 .gtv-line:hover { background: #f6f8fa; }
@@ -161,19 +149,17 @@ a.gtv-line:focus {
 }
 a.gtv-line:visited { color: inherit; }
 
-/* Tree glyphs — subtle gray like real `tree` output */
+/* Tree glyphs */
 .gtv-glyph { color: #8b949e; }
 .gtv-name  { color: #24292f; }
 .gtv-dirname { color: #0969da; font-weight: 600; }
 
-/* Badges */
 .gtv-badge {
   font-style: normal;
   font-size: 11px;
   opacity: 0.9;
 }
 
-/* Size column */
 .gtv-size {
   color: #6e7781;
   font-size: 11px;

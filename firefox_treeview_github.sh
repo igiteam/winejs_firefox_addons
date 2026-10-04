@@ -38,7 +38,7 @@ cd "$EXTNAME" || exit
 # ---------------------------------------------------------------
 # Icons
 # ---------------------------------------------------------------
-echo -e "${CYAN}📥 Downloading tree icon...${NC}"
+echo -e "${CYAN}📥 Downloading icon...${NC}"
 curl -sL -o icons/tree.png "https://getdrawings.com/icon-images/tree-icon-20.png" || true
 
 if [ ! -s icons/tree.png ]; then
@@ -276,7 +276,7 @@ browser.browserAction.onClicked.addListener(async (tab) => {
 
 browser.contextMenus.create({
   id: "treeview-show",
-  title: "🌲 Show repo tree",
+  title: "Show repo tree",
   contexts: ["page", "link"],
   documentUrlPatterns: ["https://github.com/*"]
 });
@@ -456,7 +456,7 @@ cat << 'EOL' > content.js
     const body = p.querySelector(".gtv-body");
 
     if (state.loading) {
-      body.innerHTML = `<div class="gtv-loading">Loading tree…</div>`;
+      body.innerHTML = `<div class="gtv-loading">Loading…</div>`;
       return;
     }
     if (state.error) {
@@ -517,7 +517,7 @@ cat << 'EOL' > content.js
       }
     });
 
-    body.innerHTML = `<pre class="gtv-pre">${linesHtml.join("\n")}</pre>`;
+    body.innerHTML = `<pre class="gtv-pre">${linesHtml.join("")}</pre>`;
 
     // Wire interactions
     body.querySelectorAll(".gtv-line").forEach(el => {
@@ -552,30 +552,25 @@ cat << 'EOL' > content.js
   }
 
   // -----------------------------------------------------------
-  // Panel
+  // Panel — single header bar, everything in it
   // -----------------------------------------------------------
   function buildPanel() {
     const panel = document.createElement("div");
     panel.id = PANEL_ID;
     panel.innerHTML = `
       <div class="gtv-header">
-        <span class="gtv-icon">🌲</span>
-        <span class="gtv-title">repo tree</span>
+        <span class="gtv-title"></span>
         <span class="gtv-stats"></span>
-        <span class="gtv-spacer"></span>
+        <input type="text" class="gtv-filter" placeholder="filter paths..." spellcheck="false">
+        <button class="gtv-btn" data-act="expand-all" title="Expand all">⤢</button>
+        <button class="gtv-btn" data-act="collapse-all" title="Collapse all">⤡</button>
+        <button class="gtv-btn gtv-btn-txt gtv-btn-active" data-act="mode-text" title="Plain string, copyable">📄</button>
+        <button class="gtv-btn gtv-btn-txt" data-act="mode-links" title="Clickable rows">🔗</button>
         <button class="gtv-btn" data-act="refresh" title="Re-fetch tree">↻</button>
         <button class="gtv-btn" data-act="close" title="Close (Esc)">×</button>
       </div>
-      <div class="gtv-toolbar">
-        <input type="text" class="gtv-filter" placeholder="filter paths..." spellcheck="false">
-        <button class="gtv-btn gtv-btn-txt" data-act="expand-all" title="Expand all">⤢ expand</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="collapse-all" title="Collapse all">⤡ collapse</button>
-        <span class="gtv-spacer"></span>
-        <button class="gtv-btn gtv-btn-txt gtv-btn-active" data-act="mode-text" title="Plain string, copyable">📄 string</button>
-        <button class="gtv-btn gtv-btn-txt" data-act="mode-links" title="Same layout, clickable rows">🔗 links</button>
-      </div>
       <div class="gtv-body">
-        <div class="gtv-loading">Loading tree…</div>
+        <div class="gtv-loading">Loading…</div>
       </div>
       <div class="gtv-footer">
         <span class="gtv-sel-info">0 selected</span>
@@ -654,7 +649,7 @@ cat << 'EOL' > content.js
     const title = p.querySelector(".gtv-title");
     if (!state.owner) {
       stats.textContent = "";
-      title.textContent = "repo tree";
+      title.textContent = "";
       return;
     }
     title.textContent = `${state.owner}/${state.repo}@${state.branch}`;
@@ -852,7 +847,7 @@ cat << 'EOL' > content.js
 EOL
 
 # ---------------------------------------------------------------
-# treeview.css — white GitHub theme
+# treeview.css — white GitHub theme, single header, tight rows
 # ---------------------------------------------------------------
 cat << 'EOL' > treeview.css
 /* ============================================================
@@ -874,28 +869,28 @@ cat << 'EOL' > treeview.css
   overflow: hidden;
 }
 
-/* ---------- Header ---------- */
+/* ---------- Header — ONE bar, everything in it ---------- */
 .gtv-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
+  gap: 8px;
+  padding: 8px 16px;
   background: #ffffff;
   border-bottom: 1px solid #d0d7de;
-  height: 56px;
+  height: 52px;
   flex-shrink: 0;
 }
-
-.gtv-icon { font-size: 18px; line-height: 1; }
 
 .gtv-title {
   font-weight: 600;
   color: #24292f;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 40vw;
+  max-width: 30vw;
+  flex-shrink: 1;
 }
 
 .gtv-stats {
@@ -903,8 +898,7 @@ cat << 'EOL' > treeview.css
   font-size: 12px;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex-shrink: 0;
 }
 
 .gtv-spacer { flex: 1; }
@@ -914,13 +908,13 @@ cat << 'EOL' > treeview.css
   border: 1px solid #d0d7de;
   color: #24292f;
   cursor: pointer;
-  min-width: 32px;
-  height: 32px;
+  min-width: 30px;
+  height: 30px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 13px;
   flex-shrink: 0;
   padding: 0 8px;
   font-family: inherit;
@@ -931,9 +925,9 @@ cat << 'EOL' > treeview.css
 
 .gtv-btn-txt {
   width: auto;
-  padding: 0 12px;
+  padding: 0 8px;
   font-size: 13px;
-  gap: 6px;
+  gap: 4px;
 }
 
 .gtv-btn-active {
@@ -943,28 +937,18 @@ cat << 'EOL' > treeview.css
 }
 .gtv-btn-active:hover { background: #0860ca; border-color: #0860ca; }
 
-/* ---------- Toolbar ---------- */
-.gtv-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
-  background: #ffffff;
-  border-bottom: 1px solid #d0d7de;
-  flex-shrink: 0;
-}
-
 .gtv-filter {
   flex: 1;
-  max-width: 520px;
+  min-width: 120px;
+  max-width: 320px;
   background: #ffffff;
   border: 1px solid #d0d7de;
   color: #24292f;
-  padding: 6px 12px;
+  padding: 4px 10px;
   border-radius: 6px;
-  font-size: 13px;
+  font-size: 12.5px;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-  height: 32px;
+  height: 30px;
 }
 .gtv-filter::placeholder { color: #6e7781; }
 .gtv-filter:focus {
@@ -985,26 +969,25 @@ cat << 'EOL' > treeview.css
 .gtv-pre {
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   font-size: 12.5px;
-  line-height: 1.5;
+  line-height: 1.2;
   white-space: pre;
-  padding: 16px 24px 60px;
+  padding: 8px 16px 40px;
   margin: 0;
   color: #24292f;
   min-width: 100%;
-  display: inline-block;
+  display: block;
   tab-size: 4;
 }
 
-/* Each line is one row. In string mode it's a <span>.
-   In links mode it's an <a>. Visually identical. */
+/* Zero gaps between rows — tight like `tree` output */
 .gtv-line {
   display: block;
   white-space: pre;
   color: inherit;
   text-decoration: none;
-  padding: 0 4px;
-  margin: 0 -4px;
-  border-radius: 3px;
+  padding: 0;
+  margin: 0;
+  line-height: 1.2;
   cursor: default;
 }
 .gtv-line:hover { background: #f6f8fa; }
@@ -1018,19 +1001,17 @@ a.gtv-line:focus {
 }
 a.gtv-line:visited { color: inherit; }
 
-/* Tree glyphs — subtle gray like real `tree` output */
+/* Tree glyphs */
 .gtv-glyph { color: #8b949e; }
 .gtv-name  { color: #24292f; }
 .gtv-dirname { color: #0969da; font-weight: 600; }
 
-/* Badges */
 .gtv-badge {
   font-style: normal;
   font-size: 11px;
   opacity: 0.9;
 }
 
-/* Size column */
 .gtv-size {
   color: #6e7781;
   font-size: 11px;
@@ -1119,7 +1100,7 @@ Two render modes: copyable plain-text string, or clickable links.
 - **🔗 links** — same layout and glyphs, but each row is an `<a href>`.
   Files open on GitHub in a new tab. Directories toggle collapse.
 
-Toggle with the two buttons in the toolbar.
+Toggle with the two buttons in the header bar.
 
 ## Glyphs
 
@@ -1274,11 +1255,11 @@ echo -e "${CYAN} XPI:      $DEST${NC}"
 echo -e "${CYAN} Reload:   about:debugging#/runtime/this-firefox${NC}"
 echo -e "${CYAN} Or drag:  $DEST  →  Firefox window${NC}"
 echo ""
-echo -e "${YELLOW}🌲 USAGE:${NC}"
+echo -e "${YELLOW} USAGE:${NC}"
 echo -e "  • Open any github.com/<owner>/<repo> page"
-echo -e "  • Click the 🌲 toolbar button, or press Ctrl+Shift+T"
+echo -e "  • Click the toolbar button, or press Ctrl+Shift+T"
 echo -e "  • Full-screen white GitHub-themed tree appears"
-echo -e "  • Toolbar: filter, expand, collapse, 📄 string / 🔗 links"
+echo -e "  • Header: repo@branch · stats · filter · expand/collapse · 📄/🔗 · ↻ · ×"
 echo -e "  • In string mode the tree is one copyable <pre> block"
 echo -e "  • In links mode each row opens on GitHub"
 echo -e "  • Ctrl+click files to multi-select, then footer buttons light up"

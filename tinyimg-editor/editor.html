@@ -22,7 +22,6 @@
       overflow: hidden;
     }
 
-    /* ── Sidebar: 2-column grid ── */
     .toolbar {
       position: fixed;
       top: 0;
@@ -40,17 +39,15 @@
       align-content: start;
     }
 
-    .toolbar::-webkit-scrollbar {
-      display: none;
-    }
+    .toolbar::-webkit-scrollbar { display: none; }
 
-    /* Full-width rows: dividers, headers, big controls */
     .toolbar hr,
     .toolbar strong,
     .toolbar .color-picker,
     .toolbar .containerResize,
     .toolbar > input[type=file],
-    .toolbar #btnRemoveBg {
+    .toolbar #btnRemoveBg,
+    .toolbar #btnApplyResize {
       grid-column: 1 / -1;
     }
 
@@ -67,7 +64,6 @@
       margin: 6px 0;
     }
 
-    /* All buttons fit in a grid cell */
     .toolbar button {
       margin: 0;
       padding: 6px 4px;
@@ -84,25 +80,11 @@
       min-height: 28px;
     }
 
-    .toolbar button:hover {
-      background-color: #d6d6d6;
-    }
+    .toolbar button:hover { background-color: #d6d6d6; }
+    .toolbar button.selected { outline: 2px solid #3a76b1; background-color: #dce9f9; }
+    .toolbar button:disabled { opacity: 0.4; cursor: default; }
+    .toolbar button:disabled:hover { background-color: #efefef; }
 
-    .toolbar button.selected {
-      outline: 2px solid #3a76b1;
-      background-color: #dce9f9;
-    }
-
-    .toolbar button:disabled {
-      opacity: 0.4;
-      cursor: default;
-    }
-
-    .toolbar button:disabled:hover {
-      background-color: #efefef;
-    }
-
-    /* Number inputs span both columns */
     .toolbar input[type=number] {
       grid-column: 1 / -1;
       width: 100%;
@@ -127,50 +109,14 @@
       font-size: 13px;
     }
 
-    .toolbar input[type=checkbox] {
-      cursor: pointer;
-    }
+    .toolbar input[type=checkbox] { cursor: pointer; }
 
-    /* Color picker spans both columns */
-    .color-picker {
-      padding: 5px;
-      border: 1px solid #c4c4c4;
-      margin: 0;
-    }
+    .color-picker { padding: 5px; border: 1px solid #c4c4c4; margin: 0; }
+    .color-picker.disabled { opacity: 0.4; pointer-events: none; }
+    .color-picker-preview { width: 100%; height: 24px; border: 1px solid #c4c4c4; margin-bottom: 4px; }
+    .color-picker-input { width: 100%; padding: 4px; margin: 2px 0; border: 1px solid #c4c4c4; font-family: monospace; font-size: 11px; }
+    .containerResize { padding: 0; }
 
-    .color-picker.disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    .color-picker-preview {
-      width: 100%;
-      height: 24px;
-      border: 1px solid #c4c4c4;
-      margin-bottom: 4px;
-    }
-
-    .color-picker-input {
-      width: 100%;
-      padding: 4px;
-      margin: 2px 0;
-      border: 1px solid #c4c4c4;
-      font-family: monospace;
-      font-size: 11px;
-    }
-
-    .containerResize {
-      padding: 0;
-    }
-
-    .title {
-      text-align: center;
-      font-weight: bold;
-      margin: 10px 0;
-      cursor: default;
-    }
-
-    /* ── Workspace matches toolbar width ── */
     .workspace {
       flex: 1;
       display: flex;
@@ -180,15 +126,8 @@
       overflow: auto;
     }
 
-    canvas {
-      background: #fff;
-      max-width: 100%;
-      max-height: 100%;
-    }
-
-    input[type=file] {
-      display: none;
-    }
+    canvas { background: #fff; max-width: 100%; max-height: 100%; }
+    input[type=file] { display: none; }
 
     .notification {
       position: fixed;
@@ -210,16 +149,19 @@
     <button id="btnOpen">📁 Open</button>
     <button id="btnUndo" disabled>↩ Undo</button>
     <button id="btnRedo" disabled>↪ Redo</button>
-    
+
     <hr>
     <strong>Transform</strong>
     <button id="btnFlipH">↔ Flip H</button>
     <button id="btnFlipV">↕ Flip V</button>
     <button id="btnRotateLeft">↺ Rotate L</button>
     <button id="btnRotateRight">↻ Rotate R</button>
-    <button id="btnCrop">✂ Crop</button>
+    <button id="btnCropMode">✂ Crop</button>
+    <button id="btnApplyCrop" disabled>✔ Apply</button>
+
     <hr>
-    <button id="btnRemoveBg" class="primary" style="background:#3a76b1; color:white; text-align:center; justify-content:center;">🎭 Remove Background</button>
+    <strong>Background</strong>
+    <button id="btnRemoveBg" style="background:#3a76b1; color:white;">🎭 Remove Background</button>
 
     <hr>
     <strong>Merge</strong>
@@ -228,7 +170,7 @@
     <button id="btnPasteOverlay">📋 Paste Overlay</button>
     <input type="file" id="mergeFileSelector" accept="image/*">
     <input type="file" id="pasteOverlayFileSelector" accept="image/*">
-    
+
     <hr>
     <strong>Draw</strong>
     <button id="btnDrawSquare">■ Square</button>
@@ -236,41 +178,43 @@
     <button id="btnDrawCircle">● Circle</button>
     <button id="btnDrawCircleOutline">○ Outline</button>
     <button id="btnDrawLine">/ Line</button>
-    
+
     <div class="color-picker disabled" id="colorPicker">
       <div class="color-picker-preview" id="colorPreview" style="background:#ff0000"></div>
       <input type="text" id="inputShapeColorHex" class="color-picker-input" value="#ff0000" maxlength="7">
       <input type="text" id="inputShapeColorRgb" class="color-picker-input" value="255,0,0">
     </div>
-    
+
     <hr>
+    <strong>Resize</strong>
     <div class="containerResize">
       <input type="number" id="inputWidth" min="1" placeholder="Width">
       <input type="number" id="inputHeight" min="1" placeholder="Height">
       <label><input type="checkbox" id="checkKeepRatio" checked> Keep ratio</label>
+      <button id="btnApplyResize">Apply Resize</button>
     </div>
-    
+
     <hr>
     <strong>Download</strong>
     <button id="btnDownloadPNG">💾 PNG</button>
     <button id="btnDownloadJPG">💾 JPG</button>
     <button id="btnDownloadWEBP">💾 WebP</button>
-    
+
     <hr>
     <strong>Base64</strong>
     <button id="btnDownloadPNGBase64">📄 PNG (Base64)</button>
     <button id="btnDownloadJPGBase64">📄 JPG (Base64)</button>
     <button id="btnDownloadWEBPBase64">📄 WebP (Base64)</button>
-    
+
     <hr>
   </div>
-  
+
   <div class="workspace">
     <canvas id="canvas"></canvas>
   </div>
-  
+
   <div id="notification" class="notification"></div>
-  
+
   <script src="editor.js"></script>
 </body>
 </html>

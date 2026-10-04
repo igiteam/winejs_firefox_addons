@@ -13,28 +13,30 @@ browser.storage.local.get(['removeBgApiKey']).then(result => {
 
 // Initialize context menu on install
 browser.runtime.onInstalled.addListener(() => {
-  browser.contextMenus.create({
-    id: "crop-image",
-    title: "Crop Image",
-    contexts: ["image"]
-  });
-  
-  browser.contextMenus.create({
-    id: "remove-bg",
-    title: "Remove Background",
-    contexts: ["image"]
-  });
-  
-  browser.contextMenus.create({
-    id: "separator-1",
-    type: "separator",
-    contexts: ["image"]
-  });
-  
-  browser.contextMenus.create({
-    id: "configure-api",
-    title: "Configure remove.bg API Key",
-    contexts: ["image"]
+  browser.contextMenus.removeAll(() => {
+    browser.contextMenus.create({
+      id: "crop-image",
+      title: "Edit with TinyIMG (Crop / Draw)",
+      contexts: ["image"]
+    });
+
+    browser.contextMenus.create({
+      id: "remove-bg",
+      title: "Remove Background",
+      contexts: ["image"]
+    });
+
+    browser.contextMenus.create({
+      id: "separator-1",
+      type: "separator",
+      contexts: ["image"]
+    });
+
+    browser.contextMenus.create({
+      id: "configure-api",
+      title: "Configure remove.bg API Key",
+      contexts: ["image"]
+    });
   });
 });
 
@@ -44,7 +46,7 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
     showNotification("Already processing an image. Please wait.");
     return;
   }
-  
+
   switch(info.menuItemId) {
     case "crop-image":
       handleCropImage(info, tab);
@@ -54,34 +56,29 @@ browser.contextMenus.onClicked.addListener((info, tab) => {
       break;
     case "configure-api":
       browser.tabs.create({ url: "https://www.remove.bg/api#api-key" });
-      browser.tabs.create({ 
+      browser.tabs.create({
         url: browser.runtime.getURL("popup.html") + "?configure=api"
       });
       break;
   }
 });
 
-// Handle toolbar button click
-browser.browserAction.onClicked.addListener((tab) => {
-  browser.tabs.create({ 
-    url: browser.runtime.getURL("editor.html")
-  });
-});
+// >>> FIX: removed browserAction.onClicked (it never fires with default_popup)
 
 // Handle messages from content script
 browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log("Background received message:", message.action);
-  
+
   switch(message.action) {
     case "getImageData":
       sendResponse({imageData: currentImageData});
       break;
-      
+
     case "setImageData":
       currentImageData = message.imageData;
       sendResponse({success: true});
       break;
-      
+
     case "removeBackground":
       removeBackground(message.imageData, message.imageUrl)
         .then(result => {
@@ -91,81 +88,108 @@ browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
           sendResponse({success: false, error: error.message});
         });
       return true;
-      
+
     case "downloadImage":
       downloadImage(message.imageData, message.filename);
       sendResponse({success: true});
       break;
-      
+
     case "saveApiKey":
       removeBgApiKey = message.apiKey;
       browser.storage.local.set({removeBgApiKey: message.apiKey})
         .then(() => sendResponse({success: true}))
         .catch(error => sendResponse({success: false, error: error.message}));
       return true;
-      
+
     case "getApiKey":
       sendResponse({apiKey: removeBgApiKey});
       break;
-      
+
     default:
       sendResponse({success: false, error: "Unknown action"});
   }
 });
 
-// Handle crop image
+// >>> FIX: handleCropImage no longer blocks on fetch — uses content script grab
 async function handleCropImage(info, tab) {
   isProcessing = true;
-  
+
   try {
     showNotification("Loading image for cropping...");
-    
-    const imageData = await getImageDataFromUrl(info.srcUrl);
+
+    const imageData = await grabImageData(info.srcUrl, tab && tab.id);
+    if (!imageData) throw new Error("Could not load image (CORS or blocked)");
+
     currentImageData = imageData;
-    
+
     await browser.tabs.create({
       url: browser.runtime.getURL("editor.html") + "?image=" + encodeURIComponent(imageData),
       active: true
     });
-    
+
     showNotification("Image loaded in editor!");
-    
+
   } catch (error) {
+    console.error("handleCropImage failed:", error);
     showNotification("Failed to crop image: " + error.message);
   } finally {
     isProcessing = false;
   }
 }
 
-// Handle background removal
+// >>> FIX: handleRemoveBackground now grabs bytes via content script first
 async function handleRemoveBackground(info, tab) {
   isProcessing = true;
-  
+
   try {
     if (!removeBgApiKey) {
       showNotification("Please configure your remove.bg API key first");
-      browser.tabs.create({ 
+      browser.tabs.create({
         url: browser.runtime.getURL("popup.html") + "?configure=api"
       });
       return;
     }
-    
+
     showNotification("Removing background...");
-    
-    const result = await removeBackground(null, info.srcUrl);
-    
+
+    const result = await removeBackground(null, info.srcUrl, tab && tab.id);
+
     await browser.tabs.create({
       url: browser.runtime.getURL("editor.html") + "?image=" + encodeURIComponent(result) + "&fromRemoveBg=true",
       active: true
     });
-    
+
     showNotification("Background removed successfully!");
-    
+
   } catch (error) {
+    console.error("handleRemoveBackground failed:", error);
     showNotification("Failed to remove background: " + error.message);
   } finally {
     isProcessing = false;
   }
+}
+
+// >>> FIX: grab image bytes via content script (CORS-safe) with fetch fallback
+async function grabImageData(srcUrl, tabId) {
+  // 1) Ask the content script in the tab
+  if (tabId != null) {
+    try {
+      const r = await browser.tabs.sendMessage(tabId, {
+        action: "grabImageData",
+        srcUrl
+      });
+      if (r && r.success && r.imageData) return r.imageData;
+    } catch (e) {
+      console.warn("content script grab failed:", e.message);
+    }
+  }
+  // 2) Fallback: direct fetch (works for CORS-enabled images)
+  try {
+    return await getImageDataFromUrl(srcUrl);
+  } catch (e) {
+    console.warn("background fetch fallback failed:", e.message);
+  }
+  return null;
 }
 
 // Get image data from URL
@@ -174,18 +198,18 @@ async function getImageDataFromUrl(url) {
     if (url.startsWith('data:')) {
       return url;
     }
-    
+
     const cacheBusterUrl = url + (url.includes('?') ? '&' : '?') + 't=' + Date.now();
-    
+
     const response = await fetch(cacheBusterUrl, {
       mode: 'cors',
       credentials: 'omit'
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     const blob = await response.blob();
     return await blobToDataURL(blob);
   } catch (error) {
@@ -204,29 +228,48 @@ function blobToDataURL(blob) {
 }
 
 // Remove background using remove.bg API
-async function removeBackground(imageData, imageUrl) {
+// >>> FIX: added optional tabId so we can grab bytes CORS-free for the editor path
+async function removeBackground(imageData, imageUrl, tabId) {
   console.log("Starting background removal");
-  
+
   if (!removeBgApiKey) {
     throw new Error("API key not configured. Please set your remove.bg API key first.");
   }
-  
+
   const formData = new FormData();
-  
+
   try {
     if (imageData) {
       const response = await fetch(imageData);
       const blob = await response.blob();
       formData.append("image_file", blob, "image.png");
     } else if (imageUrl) {
-      formData.append("image_url", imageUrl);
+      // Try to grab bytes via content script first — much more reliable than image_url
+      let grabbed = null;
+      if (tabId != null) {
+        try {
+          const r = await browser.tabs.sendMessage(tabId, {
+            action: "grabImageData",
+            srcUrl: imageUrl
+          });
+          if (r && r.success && r.imageData) grabbed = r.imageData;
+        } catch (e) {}
+      }
+
+      if (grabbed) {
+        const response = await fetch(grabbed);
+        const blob = await response.blob();
+        formData.append("image_file", blob, "image.png");
+      } else {
+        formData.append("image_url", imageUrl);
+      }
     } else {
       throw new Error("No image provided");
     }
-    
+
     formData.append("size", "auto");
     formData.append("format", "png");
-    
+
     const response = await fetch("https://api.remove.bg/v1.0/removebg", {
       method: "POST",
       headers: {
@@ -234,7 +277,7 @@ async function removeBackground(imageData, imageUrl) {
       },
       body: formData
     });
-    
+
     if (!response.ok) {
       let errorText;
       try {
@@ -246,7 +289,7 @@ async function removeBackground(imageData, imageUrl) {
       } catch (e) {
         errorText = `HTTP ${response.status}`;
       }
-      
+
       if (response.status === 402) {
         throw new Error("API quota exceeded. Free tier: 50 calls/month.");
       } else if (response.status === 403) {
@@ -257,10 +300,10 @@ async function removeBackground(imageData, imageUrl) {
         throw new Error(`API Error (${response.status}): ${errorText}`);
       }
     }
-    
+
     const resultBlob = await response.blob();
     return await blobToDataURL(resultBlob);
-    
+
   } catch (error) {
     if (error.message.includes("Failed to fetch")) {
       throw new Error("Network error. Please check your internet connection.");
@@ -277,14 +320,14 @@ function downloadImage(imageData, filename) {
     const mimeString = imageData.split(',')[0].split(':')[1].split(';')[0];
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
-    
+
     for (let i = 0; i < byteString.length; i++) {
       ia[i] = byteString.charCodeAt(i);
     }
-    
+
     const blob = new Blob([ab], { type: mimeString });
     const url = URL.createObjectURL(blob);
-    
+
     browser.downloads.download({
       url: url,
       filename: filename,
@@ -299,7 +342,7 @@ function downloadImage(imageData, filename) {
       link.click();
       document.body.removeChild(link);
     });
-    
+
   } catch (error) {
     showNotification("Download failed: " + error.message);
   }

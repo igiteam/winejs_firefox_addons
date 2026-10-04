@@ -167,7 +167,7 @@ browser.browserAction.onClicked.addListener(async (tab) => {
 
 browser.contextMenus.create({
   id: "treeview-show",
-  title: "🌲 Show repo tree",
+  title: "Show repo tree",
   contexts: ["page", "link"],
   documentUrlPatterns: ["https://github.com/*"]
 });
